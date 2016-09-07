@@ -10,6 +10,7 @@ with the Fitbit Oauth server.
 
 import unittest
 from flask_oauthlib.client import OAuth
+from base64 import b64encode
 
 
 def getOauthCredentials():
@@ -25,10 +26,10 @@ def getOauthCredentials():
     return credentials
 
 
-def oauthServer():
+def oauthServer(app=None):
     credentials = getOauthCredentials()
     
-    oauth = OAuth()
+    oauth = OAuth(app)
     Fitbit = oauth.remote_app(
         name='fitbit',
         consumer_key=credentials['clientId'],
@@ -37,6 +38,9 @@ def oauthServer():
         access_token_url='https://api.fitbit.com/oauth2/token',
         request_token_params={'scope':'activity heartrate',
                               'expires_in': 2592000},
+        access_token_params={'client_id':credentials['clientId']},
+        access_token_headers={'Authorization':'Basic '+
+            b64encode("{0}:{1}".format(credentials['clientId'], credentials['clientSecret']))},
         authorize_url='https://www.fitbit.com/oauth2/authorize'
         )
     return Fitbit

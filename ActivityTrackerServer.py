@@ -19,7 +19,7 @@ app.secret_key = "activitytracker"
 
 
 # Go to fitbit.com to authorize user with OAuth, and get access token.
-fitbit = oauthServer()
+fitbit = oauthServer(app)
 
 
 @app.route("/")
@@ -38,14 +38,14 @@ def login():
     
 @app.route("/oauth_accept")
 def oauthAccept():
-    res = request.args.get('code')
+    res = fitbit.authorized_response()
     if res is None:
-        return "Fitbit response is None"
+        return "Access denied. reason: {0}".format(request.args['errors'])
     else:
         session['twitter_token'] = (
-            res        
+            res['access_token']     
         )
-        return res
+        return str(res)
         
 
 @fitbit.tokengetter
