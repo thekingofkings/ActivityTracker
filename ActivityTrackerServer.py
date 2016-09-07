@@ -11,7 +11,8 @@ that are collected by Fitbit.
 
 
 from flask import Flask, session, url_for, redirect, request
-from Oauth2 import oauthServer
+from Oauth2 import oauthServer, authorizationHeader
+import requests
 
 
 app = Flask(__name__)
@@ -42,16 +43,33 @@ def oauthAccept():
     if res is None:
         return "Access denied. reason: {0}".format(request.args['errors'])
     else:
-        session['twitter_token'] = (
-            res['access_token']     
-        )
-        return str(res)
-        
+        session['fitbit_token'] = (res['access_token'])
+        session['user_id'] = res['user_id']
+        return "User ID: {0}. Access token: {1}".format(
+                res['user_id'], res['access_token']            
+            )
+
 
 @fitbit.tokengetter
 def get_fitbit_token(token=None):
     return session.get('fitbit_token')
+
+
+@app.route("/activity/<dateStr>")
+def get_user_activity(dateStr):
+    """
+    Get user activities.
     
+    User id is stored in the session variable.
+    date is a string with format 'yyyy-MM-dd'
+    """
+    if 'user_id' not in session:
+        return redirect(url_for("login"))
+    else:
+        url = "https://api.fitbit.com/1/user/{0}/activities/date/{1}.json".format(session['user_id'], dateStr)
+        print url
+        header = {"Authorization":"Bearer {0}".format(session['fitbit_token'])}
+        return requests.get(url, headers=header).content
     
 
 

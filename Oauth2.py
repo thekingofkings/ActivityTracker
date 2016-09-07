@@ -26,6 +26,13 @@ def getOauthCredentials():
     return credentials
 
 
+def authorizationHeader(credentials):
+    auth_val = 'Basic '+ \
+            b64encode("{0}:{1}".format(credentials['clientId'], credentials['clientSecret']))
+    return {'Authorization': auth_val}
+
+
+
 def oauthServer(app=None):
     credentials = getOauthCredentials()
     
@@ -39,8 +46,7 @@ def oauthServer(app=None):
         request_token_params={'scope':'activity heartrate',
                               'expires_in': 2592000},
         access_token_params={'client_id':credentials['clientId']},
-        access_token_headers={'Authorization':'Basic '+
-            b64encode("{0}:{1}".format(credentials['clientId'], credentials['clientSecret']))},
+        access_token_headers=authorizationHeader(credentials),
         authorize_url='https://www.fitbit.com/oauth2/authorize'
         )
     return Fitbit
